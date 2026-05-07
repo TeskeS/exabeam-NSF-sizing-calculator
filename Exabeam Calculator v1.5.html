@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MPS and GiB per Day Calculator</title>
+
+  <style>
+
+    :root{
+      --bg:#f4f4f4;
+      --card:#fff;
+      --text:#111;
+      --muted:#555;
+      --border:#ddd;
+      --tab:#fff;
+      --tabActive:#28a745;
+      --tabHover:#218838;
+      --btn:#28a745;
+      --btnHover:#218838;
+      --danger:#c0392b;
+      --shadow: rgba(0,0,0,0.10);
+    }
+
+    body{
+      font-family: Arial, sans-serif;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+      margin:0;
+      background-color:var(--bg);
+      color:var(--text);
+      padding:16px;
+    }
+
+    .calculator{
+      max-width:650px;
+      width:100%;
+      margin:0 auto;
+      padding:20px;
+      background:var(--card);
+      border-radius:8px;
+      box-shadow:0 0 10px var(--shadow);
+      text-align:center;
+      border:1px solid var(--border);
+    }
+
+    img{
+      max-width:260px;
+      height:auto;
+    }
+
+    input{
+      padding:10px;
+      margin:10px 0;
+      width:80%;
+      max-width:320px;
+      border:1px solid var(--border);
+      border-radius:4px;
+      font-size:16px;
+    }
+
+    .row{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      margin-top:8px;
+    }
+
+    .buttons{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+
+    button{
+      padding:10px 16px;
+      border:none;
+      background-color:var(--btn);
+      color:#fff;
+      border-radius:4px;
+      cursor:pointer;
+      font-size:16px;
+      margin:10px 0;
+    }
+
+    button:hover{
+      background-color:var(--btnHover);
+    }
+
+    button.secondary{
+      background:#6c757d;
+    }
+
+    button.secondary:hover{
+      background:#5a6268;
+    }
+
+    #result,
+    #resultMPS,
+    #resultRetention{
+      margin-top:16px;
+      font-size:18px;
+      font-weight:bold;
+    }
+
+    .tabs{
+      display:flex;
+      justify-content:center;
+      cursor:pointer;
+      padding:10px;
+      background:var(--card);
+      border-bottom:2px solid var(--border);
+      gap:0;
+    }
+
+    .tab-button{
+      flex:1;
+      padding:10px;
+      text-align:center;
+      background:var(--tab);
+      border:1px solid #ccc;
+      margin-right:-1px;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .tab-button:hover{
+      background-color:var(--tabHover);
+      color:#fff;
+    }
+
+    .tab-button.active{
+      background:var(--tabActive);
+      border-color:#ccc;
+      color:#fff;
+      font-weight:bold;
+    }
+
+    .tab-content{
+      display:none;
+      padding:20px;
+      background:var(--card);
+      border:1px solid #ccc;
+      border-top:none;
+      border-radius:0 0 8px 8px;
+    }
+
+    .tab-content.active{
+      display:block;
+    }
+
+    .error{
+      color:var(--danger);
+      font-weight:600;
+      margin-top:6px;
+      min-height:22px;
+    }
+
+    .small{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:normal;
+      margin-top:6px;
+      line-height:1.35;
+    }
+
+    .footer{
+      margin-top:16px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .info-wrapper{
+      display:inline-block;
+      position:relative;
+      margin-left:6px;
+    }
+
+    .info-icon{
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      background:#28a745;
+      color:#fff;
+      font-size:12px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .info-popup{
+      display:none;
+      position:absolute;
+      top:26px;
+      left:0;
+      width:320px;
+      background:#333;
+      color:#fff;
+      padding:12px;
+      border-radius:8px;
+      text-align:left;
+      font-size:13px;
+      box-shadow:0 6px 18px rgba(0,0,0,.25);
+      z-index:1000;
+      line-height:1.5;
+    }
+
+    .info-wrapper:hover .info-popup{
+      display:block;
+      white-space:pre-line;
+    }
+
+    .info-popup textarea{
+      width:100%;
+      height:130px;
+      border:none;
+      resize:none;
+      padding:8px;
+      border-radius:6px;
+      font-family:inherit;
+      font-size:12px;
+    }
+
+    .copy-btn{
+      margin-top:6px;
+      width:100%;
+      background:#28a745;
+      border:none;
+      padding:6px;
+      border-radius:4px;
+      color:white;
+      cursor:pointer;
+    }
+
+    .copy-btn:hover{
+      background:#218838;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="calculator">
+
+  <center>
+    <img src="https://www.exabeam.com/wp-content/uploads/MISC-Exabeam-light-logo-01.svg" alt="Logo">
+  </center>
+
+  <div class="tabs">
+    <div class="tab-button active" onclick="showTab('tab1')">MPS to GiB per Day</div>
+    <div class="tab-button" onclick="showTab('tab2')">GiB per Day to MPS</div>
+    <div class="tab-button" onclick="showTab('tab3')">Data Retention</div>
+  </div>
+
+  <!-- TAB 1 -->
+  <div id="tab1" class="tab-content active">
+
+    <h2>MPS to GiB per Day Calculator</h2>
+
+    <div class="row">
+      <label for="mps">
+        <b>Enter MPS<br>(Messages Per Second):</b>
+      </label>
+
+      <input type="number"
+             id="mps"
+             placeholder="Messages Per Second Value"
+             step="any"
+             min="0">
+    </div>
+
+    <div class="row">
+
+      <label for="bytesPerMessage">
+        <b>
+
+          Enter Average Log Size (bytes)
+
+          <span class="info-wrapper">
+
+            <span class="info-icon">?</span>
+
+            <span class="info-popup">
+To get the average byte size per log, follow these steps:
+
+Remote access into the XM/platform manager
+
+Open a browser and pull up:
+https://localhost:3000
+
+Select Pipeline > Select Mediator.
+
+The "Mediator: Processing" widget will show the Average Log Size in Bytes for the time frame of your choosing.
+
+I recommend a metric timeframe of at least 2 weeks.
+
+If your dashboard doesn’t have a “Processing” widget, there should be another widget that shows the “Avg Log Size” in KiB.
+            </span>
+
+          </span>
+
+          <br>(800 is default):
+
+        </b>
+      </label>
+
+      <input type="number"
+             id="bytesPerMessage"
+             value="800"
+             placeholder="Bytes per Message"
+             step="any"
+             min="0">
+
+    </div>
+
+    <div class="buttons">
+      <button onclick="calculateGiBPerDay()">Calculate</button>
+      <button class="secondary" onclick="clearTab1()">Clear</button>
+    </div>
+
+    <div class="error" id="error1"></div>
+
+    <div id="result">
+      <p>Result:</p>
+
+      <span id="gbResult">0 GiB/day</span>
+
+      <div class="small">
+        Note: This uses 1 GiB = 1,073,741,824 bytes.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB 2 -->
+  <div id="tab2" class="tab-content">
+
+    <h2>GiB per Day to MPS Calculator</h2>
+
+    <div class="row">
+      <label for="gbPerDay">
+        <b>Enter GiB per Day:</b>
+      </label>
+
+      <input type="number"
+             id="gbPerDay"
+             placeholder="GiB per Day Value"
+             step="any"
+             min="0">
+    </div>
+
+    <div class="row">
+
+      <label for="bytesPerMessage2">
+
+        <b>
+
+          Enter Average Log Size (bytes)
+
+          <span class="info-wrapper">
+
+            <span class="info-icon">i</span>
+
+            <span class="info-popup" id="infoPopup">
+
+              <textarea id="copyText" readonly>
+To calculate average log size:
+
+1. Export sample logs from your SIEM or log source.
+2. Copy several raw events.
+3. Paste into a text editor.
+4. Check the byte size.
+5. Average them.
+
+Typical default is ~800 bytes.
+              </textarea>
+
+              <button class="copy-btn" onclick="copyInfo()">
+                Copy Directions
+              </button>
+
+            </span>
+
+          </span>
+
+          <br>(800 is default):
+
+        </b>
+
+      </label>
+
+      <input type="number"
+             id="bytesPerMessage2"
+             value="800"
+             placeholder="Bytes per Message"
+             step="any"
+             min="0">
+
+    </div>
+
+    <div class="buttons">
+      <button onclick="calculateMPS()">Calculate</button>
+      <button class="secondary" onclick="clearTab2()">Clear</button>
+    </div>
+
+    <div class="error" id="error2"></div>
+
+    <div id="resultMPS">
+      <p>Result:</p>
+      <span id="mpsResult">0 MPS</span>
+    </div>
+
+  </div>
+
+  <!-- TAB 3 -->
+  <div id="tab3" class="tab-content">
+
+    <h2>NewScale Data Retention Calculator</h2>
+
+    <div class="row">
+      <label for="ingestRate">
+        <b>Ingest Rate:</b>
+      </label>
+
+      <input type="number"
+             id="ingestRate"
+             placeholder="GiB per Day"
+             step="any"
+             min="0">
+    </div>
+
+    <div class="row">
+      <label>
+        <b>Included Searchable:</b>
+      </label>
+
+      <input type="number"
+             id="includedSearchable"
+             value="1"
+             disabled>
+    </div>
+
+    <div class="row">
+      <label for="searchableData">
+        <b>Additional Searchable Months:</b>
+      </label>
+
+      <input type="number"
+             id="searchableData"
+             placeholder="0 = only the included month"
+             step="any"
+             min="0">
+    </div>
+
+    <div class="row">
+      <label for="archiveData">
+        <b>Archive Months:</b>
+      </label>
+
+      <input type="number"
+             id="archiveData"
+             placeholder="Archive Data in Months"
+             step="any"
+             min="0">
+    </div>
+
+    <div class="buttons">
+      <button onclick="calculateDataRetention()">Calculate</button>
+      <button class="secondary" onclick="clearTab3()">Clear</button>
+    </div>
+
+    <div class="error" id="error3"></div>
+
+    <div id="resultRetention">
+
+      <p>
+        Total Log Retention:
+        <span id="retentionResult">0 Months</span>
+      </p>
+
+      <p><b>BOM</b></p>
+
+      <p>
+        Ingest Tier:
+        <span id="ingestTierResult">0 GB Per Day</span>
+      </p>
+
+      <p>
+        Long-Term Search:
+        <span id="storageResult">0 TB</span>
+      </p>
+
+      <p>
+        Long-Term Storage:
+        <span id="archiveStorageResult">0 TB</span>
+      </p>
+
+    </div>
+
+  </div>
+
+  <div class="footer">Version 1.5</div>
+
+</div>
+
+<script>
+
+  const BYTES_IN_GIB = 1073741824;
+  const SECONDS_IN_DAY = 86400;
+  const DAYS_PER_MONTH = 30.5;
+
+  function showTab(tabId){
+
+    document.querySelectorAll('.tab-content').forEach(tab => {
+      tab.classList.remove('active');
+    });
+
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.classList.remove('active');
+    });
+
+    document.getElementById(tabId).classList.add('active');
+
+    document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`)
+      .classList.add('active');
+
+    document.getElementById('error1').textContent = '';
+    document.getElementById('error2').textContent = '';
+    document.getElementById('error3').textContent = '';
+  }
+
+  function setError(id, msg){
+    document.getElementById(id).textContent = msg || '';
+  }
+
+  function asNumber(value){
+    const n = parseFloat(value);
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function calculateGiBPerDay(){
+
+    setError('error1', '');
+
+    const mps =
+      asNumber(document.getElementById('mps').value);
+
+    const bytesPerMessage =
+      asNumber(document.getElementById('bytesPerMessage').value || 800);
+
+    if(!Number.isFinite(mps) || mps <= 0){
+      setError('error1',
+        'Please enter a valid MPS value greater than 0.');
+      return;
+    }
+
+    if(!Number.isFinite(bytesPerMessage) || bytesPerMessage <= 0){
+      setError('error1',
+        'Please enter a valid average log size in bytes greater than 0.');
+      return;
+    }
+
+    const gibPerDay =
+      (mps * bytesPerMessage * SECONDS_IN_DAY) / BYTES_IN_GIB;
+
+    document.getElementById('gbResult').textContent =
+      gibPerDay.toFixed(2) + ' GiB/day';
+  }
+
+  function clearTab1(){
+
+    document.getElementById('mps').value = '';
+    document.getElementById('bytesPerMessage').value = 800;
+    document.getElementById('gbResult').textContent = '0 GiB/day';
+
+    setError('error1', '');
+  }
+
+  function calculateMPS(){
+
+    setError('error2', '');
+
+    const gibPerDay =
+      asNumber(document.getElementById('gbPerDay').value);
+
+    const bytesPerMessage =
+      asNumber(document.getElementById('bytesPerMessage2').value || 800);
+
+    if(!Number.isFinite(gibPerDay) || gibPerDay < 0){
+      setError('error2',
+        'Please enter a valid GiB/day value.');
+      return;
+    }
+
+    if(!Number.isFinite(bytesPerMessage) || bytesPerMessage <= 0){
+      setError('error2',
+        'Please enter a valid average log size.');
+      return;
+    }
+
+    const mps =
+      (gibPerDay * BYTES_IN_GIB) /
+      (bytesPerMessage * SECONDS_IN_DAY);
+
+    document.getElementById('mpsResult').textContent =
+      mps.toFixed(0) + ' MPS';
+  }
+
+  function clearTab2(){
+
+    document.getElementById('gbPerDay').value = '';
+    document.getElementById('bytesPerMessage2').value = 800;
+    document.getElementById('mpsResult').textContent = '0 MPS';
+
+    setError('error2', '');
+  }
+
+  function calculateDataRetention(){
+
+    setError('error3', '');
+
+    const includedSearchable = 1;
+
+    const additionalSearchable =
+      asNumber(document.getElementById('searchableData').value || 0);
+
+    const archiveMonths =
+      asNumber(document.getElementById('archiveData').value || 0);
+
+    const ingestRate =
+      asNumber(document.getElementById('ingestRate').value || 0);
+
+    if(!Number.isFinite(additionalSearchable) || additionalSearchable < 0){
+      setError('error3',
+        'Additional searchable months must be 0 or higher.');
+      return;
+    }
+
+    if(!Number.isFinite(archiveMonths) || archiveMonths < 0){
+      setError('error3',
+        'Archive months must be 0 or higher.');
+      return;
+    }
+
+    if(!Number.isFinite(ingestRate) || ingestRate < 0){
+      setError('error3',
+        'Ingest rate must be 0 or higher.');
+      return;
+    }
+
+    const searchableMonthsTotal =
+      includedSearchable + additionalSearchable;
+
+    const totalRetentionMonths =
+      searchableMonthsTotal + archiveMonths;
+
+    const searchableTB =
+      (ingestRate * DAYS_PER_MONTH * searchableMonthsTotal) / 1000;
+
+    const archiveTB =
+      (ingestRate * DAYS_PER_MONTH * archiveMonths) / 1000;
+
+    document.getElementById('ingestTierResult').textContent =
+      Math.ceil(ingestRate) + ' GB Per Day';
+
+    document.getElementById('retentionResult').textContent =
+      Math.ceil(totalRetentionMonths) + ' Months';
+
+    document.getElementById('storageResult').textContent =
+      Math.ceil(searchableTB) + ' TB';
+
+    document.getElementById('archiveStorageResult').textContent =
+      Math.ceil(archiveTB) + ' TB';
+  }
+
+  function clearTab3(){
+
+    document.getElementById('ingestRate').value = '';
+    document.getElementById('searchableData').value = '';
+    document.getElementById('archiveData').value = '';
+
+    document.getElementById('ingestTierResult').textContent =
+      '0 GB Per Day';
+
+    document.getElementById('retentionResult').textContent =
+      '0 Months';
+
+    document.getElementById('storageResult').textContent =
+      '0 TB';
+
+    document.getElementById('archiveStorageResult').textContent =
+      '0 TB';
+
+    setError('error3', '');
+  }
+
+</script>
+
+</body>
+</html>
