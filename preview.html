@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Average Log Size</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f4f4;
+    margin:0;
+    padding:40px;
+    color:#111;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:40px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,.10);
+}
+
+h1{
+    color:#28a745;
+    margin-top:0;
+}
+
+p{
+    line-height:1.7;
+    font-size:18px;
+}
+
+.note{
+    margin-top:30px;
+    padding:16px;
+    background:#f8f9fa;
+    border-left:5px solid #28a745;
+}
+
+.code{
+    background:#eee;
+    padding:2px 6px;
+    border-radius:4px;
+    font-family: Consolas, monospace;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Average Log Size</h1>
+
+<p>
+To get the average byte size per log, follow these steps:
+</p>
+
+<p>
+Remote access into the XM/platform manager.
+</p>
+
+<p>
+Open a browser and pull up:
+<br><br>
+<span class="code">https://localhost:3000</span>
+<br><br>
+Select <b>Mediator</b>. If your Grafana doesn’t look like my screenshot,
+you can search <b>“mediator”</b> in the search bar to locate the dashboard.
+</p>
+
+<p>
+The <b>Mediator: Processing</b> widget will show the
+<b>Average Log Size in Bytes</b> for the timeframe of your choosing.
+I recommend a metric timeframe of at least 2 weeks if not greater.
+</p>
+
+<div class="note">
+If your dashboard doesn’t have a “Processing” widget, there should
+be another widget that shows the “Avg Log Size” in KiB.
+</div>
+
+</div>
+
+</body>
+</html>
