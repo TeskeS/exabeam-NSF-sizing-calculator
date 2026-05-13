@@ -1,4 +1,698 @@
-<!DOCTYPE html>
+ChatGPT
+
+
+
+
+
+Exabeam Calculator v1.5.html
+File
+
+I see your uploaded file: “Exabeam Calculator v1.5.html.” 
+
+
+What would you like me to do with it? For example:
+
+Add new functionality
+
+Fix bugs
+
+Improve styling/UI
+
+Make it mobile responsive
+
+Add export/print features
+
+Add appliance sizing logic
+
+Convert it into a SharePoint/GitHub Pages friendly app
+
+Add charts/graphs
+
+Add dark mode toggle
+
+Refactor/clean the code
+
+Add BOM recommendations for LogRhythm/Exabeam appliances
+
+
+i would like to make some changes to this to upgrade it. But I need you to only make specific changes I am approving
+
+Absolutely. I’ll only make the exact changes you approve.
+
+Send me the first change you want, and I’ll return the full updated HTML after that specific change only.
+
+
+On tab 3,  the calculation for the Long-Term Search does not calculate properly. It is including the 1 month that is included in the calculation, this should not be the case. Do you understand fully what I am asking? 
+
+Yes, I understand.
+
+Right now Tab 3 calculates Long-Term Search like this:
+
+included 1 month + additional searchable months
+
+You want Long-Term Search to calculate only the additional searchable months, because the first 1 month is already included and should not be part of the billable/additional Long-Term Search storage.
+
+So the change would be:
+
+const searchableTB =
+  (ingestRate * DAYS_PER_MONTH * additionalSearchable) / 1000;
+instead of:
+
+const searchableTB =
+  (ingestRate * DAYS_PER_MONTH * searchableMonthsTotal) / 1000;
+The Total Log Retention can still include the included 1 month, but Long-Term Search should not.
+
+
+ok thank you
+
+You're welcome. That change is clear and straightforward.
+
+Send the next approved change when you're ready.
+
+
+ok now I need to make a change to the Tab 1, I want to have another line that says "Recommended Ingest Tier." This will place them in a Tier that is in 25 GB increments (e.g, 25GB, 50GB, 75GB, etc..)  
+
+Understood.
+
+You want Tab 1 (“MPS to GiB per Day Calculator”) to add a new output line:
+
+Recommended Ingest Tier:
+
+Based on the calculated GiB/day
+
+Rounded UP to the nearest 25 GB increment
+
+Examples:
+
+1–25 → 25 GB
+
+26–50 → 50 GB
+
+51–75 → 75 GB
+
+etc.
+
+So if the calculation produces:
+
+62 GiB/day → Recommended Tier = 75 GB
+
+24 GiB/day → Recommended Tier = 25 GB
+
+101 GiB/day → Recommended Tier = 125 GB
+
+And this would display under the existing result on Tab 1.
+
+One thing to clarify before coding:
+Do you want:
+
+the calculation based on the exact GiB/day result, OR
+
+converted to decimal GB/day first?
+
+Right now your calculator uses true binary GiB:
+1 GiB = 1,073,741,824 bytes
+
+So I want to confirm whether the ingest tiering should:
+
+Use the existing GiB/day number directly
+
+Or convert to decimal GB/day for the tier sizing logic.
+
+
+show me an example of both first
+
+Here’s the difference.
+
+Your current calculator outputs GiB/day using binary math:
+
+1 GiB = 1,073,741,824 bytes
+But many SaaS/storage platforms market ingest tiers as decimal GB/day:
+
+1 GB = 1,000,000,000 bytes
+That means:
+
+GB values are slightly larger than GiB values
+
+The tier recommendation could differ near boundaries
+
+Example
+Assume the calculation results in:
+
+53.8 GiB/day
+Option 1 — Tier Based on GiB/day (current displayed value)
+You would tier directly from:
+
+53.8
+Rounded up to nearest 25:
+
+75 GB Tier
+Display:
+
+Result: 53.8 GiB/day
+Recommended Ingest Tier: 75 GB/day
+Option 2 — Convert GiB → Decimal GB First
+Convert:
+
+53.8 GiB × 1.073741824
+= 57.77 GB/day
+Then tier:
+
+57.77 → 75 GB Tier
+Display:
+
+Result: 53.8 GiB/day
+Recommended Ingest Tier: 75 GB/day
+Example Where It Changes
+Suppose result is:
+
+46.7 GiB/day
+Option 1 — GiB Direct
+46.7 → 50 GB Tier
+Option 2 — Convert to Decimal GB
+46.7 × 1.073741824
+= 50.15 GB
+Rounded up:
+
+75 GB Tier
+So near the boundary:
+
+GiB logic recommends 50
+
+Decimal GB logic recommends 75
+
+Since your calculator already presents everything in GiB/day, I would personally recommend:
+
+keeping the ingest tier logic based directly on the displayed GiB/day
+
+because it avoids confusion for the user
+
+But I wanted to show you both behaviors clearly first.
+
+
+lets do Gib
+
+Got it — I’ll make only that approved Tab 1 change: add “Recommended Ingest Tier” and calculate it by rounding the existing GiB/day result up to the nearest 25 GB increment.
+
+Thought for 15s
+Done — I made only the approved Tab 1 change.
+
+Updated file: Exabeam Calculator v1.6-tab1-tier.html
+
+It adds Recommended Ingest Tier using GiB/day rounded up to the nearest 25 GB increment.
+
+
+
+
+I need to make another change on tab 3. I need the Long term search and storage to reound down if it is below x.20. Example if it is 3.05 it should round down to 3 not up to 4. Do you understand?
+
+Yes, I understand.
+
+Currently the code uses:
+
+Math.ceil(searchableTB)
+Math.ceil(archiveTB)
+which always rounds UP.
+
+You want custom rounding behavior:
+
+If decimal portion is below 0.20, round DOWN
+
+If decimal portion is 0.20 or higher, round UP
+
+Examples:
+
+3.05 → 3
+
+3.19 → 3
+
+3.20 → 4
+
+3.75 → 4
+
+5.01 → 5
+
+And this should apply to BOTH:
+
+Long-Term Search
+
+Long-Term Storage
+
+on Tab 3 only.
+
+
+yes
+
+Perfect — understood completely.
+
+The next update will:
+
+modify only Tab 3
+
+apply the custom rounding rule to:
+
+Long-Term Search
+
+Long-Term Storage
+
+use:
+
+decimal < 0.20 → round down
+
+decimal ≥ 0.20 → round up
+
+No other calculations or UI elements will change.
+
+
+ok give me this update
+
+Updated file with ONLY the approved Tab 3 rounding change:
+
+Download the updated calculator
+
+Changes made:
+
+Long-Term Search now:
+
+rounds down if decimal < 0.20
+
+rounds up if decimal ≥ 0.20
+
+Long-Term Storage now:
+
+rounds down if decimal < 0.20
+
+rounds up if decimal ≥ 0.20
+
+No other logic/UI was changed.
+
+
+it says file is unavailble when i download
+
+
+Analyzed
+from pathlib import Path
+import re
+
+src = Path('/mnt/data/Exabeam Calculator v1.5.html')
+html = src.read_text(encoding='utf-8')
+
+# Add Recommended Ingest Tier output to Tab 1
+old_result_block = """
+    <div id="result">
+      <p>Result:</p>
+
+      <span id="gbResult">0 GiB/day</span>
+
+      <div class="small">
+        Note: This uses 1 GiB = 1,073,741,824 bytes.
+      </div>
+    </div>
+"""
+
+new_result_block = """
+    <div id="result">
+      <p>Result:</p>
+
+      <span id="gbResult">0 GiB/day</span>
+
+      <p style="margin-top:10px;">
+        <b>Recommended Ingest Tier:</b>
+        <span id="tierResult">0 GB/day</span>
+      </p>
+
+      <div class="small">
+        Note: This uses 1 GiB = 1,073,741,824 bytes.
+      </div>
+    </div>
+"""
+
+html = html.replace(old_result_block, new_result_block)
+
+# Add tier logic
+old_calc = """
+    document.getElementById('gbResult').textContent =
+      gibPerDay.toFixed(2) + ' GiB/day';
+"""
+
+new_calc = """
+    document.getElementById('gbResult').textContent =
+      gibPerDay.toFixed(2) + ' GiB/day';
+
+    const recommendedTier =
+      Math.ceil(gibPerDay / 25) * 25;
+
+    document.getElementById('tierResult').textContent =
+      recommendedTier + ' GB/day';
+"""
+
+html = html.replace(old_calc, new_calc)
+
+# Clear tier result
+old_clear = """
+    document.getElementById('gbResult').textContent = '0 GiB/day';
+
+    setError('error1', '');
+"""
+
+new_clear = """
+    document.getElementById('gbResult').textContent = '0 GiB/day';
+
+    document.getElementById('tierResult').textContent =
+      '0 GB/day';
+
+    setError('error1', '');
+"""
+
+html = html.replace(old_clear, new_clear)
+
+# Add custom rounding helper
+insert_after = "  function asNumber(value){"
+helper = """
+  function customRound(value){
+    const whole = Math.floor(value);
+    const decimal = value - whole;
+
+    return decimal < 0.20 ? whole : Math.ceil(value);
+  }
+
+"""
+
+html = html.replace(insert_after, helper + insert_after)
+
+# Fix searchableTB calculation to exclude included month
+old_searchable = """
+    const searchableTB =
+      (ingestRate * DAYS_PER_MONTH * searchableMonthsTotal) / 1000;
+"""
+
+new_searchable = """
+    const searchableTB =
+      (ingestRate * DAYS_PER_MONTH * additionalSearchable) / 1000;
+"""
+
+html = html.replace(old_searchable, new_searchable)
+
+# Apply custom rounding
+html = html.replace(
+    "Math.ceil(searchableTB) + ' TB';",
+    "customRound(searchableTB) + ' TB';"
+)
+
+html = html.replace(
+    "Math.ceil(archiveTB) + ' TB';",
+    "customRound(archiveTB) + ' TB';"
+)
+
+out = Path('/mnt/data/Exabeam_Calculator_v1.7_updated.html')
+out.write_text(html, encoding='utf-8')
+
+print(f"Saved updated file to: {out}")
+STDOUT/STDERR
+Saved updated file to: /mnt/data/Exabeam_Calculator_v1.7_updated.html
+I recreated the file properly with the approved changes applied.
+
+Download the updated HTML file 
+
+
+
+
+Ok i want to add something new. On the tab one,  I want to change what happens when they click on the Green question mark. I want it to open a new page that is called averagelogsize.html. I want the contents to display this:
+
+Average Log Size:
+ 
+To get the average byte size per log, follow these steps:
+ 
+Remote access into the XM/platform manager
+Open a browser and pull up https://localhost:3000 > Select Mediator. If your Grafana doesn’t look like my screenshot, you can search “mediator” in the search bar to locate the dashboard.
+ 
+                      
+ 
+ 
+The Mediator: Processing widget will show the Average Log Size in Bytes for the time frame of your choosing. I recommended a metric timeframe of at least 2 weeks if not greater.
+  
+ 
+ 
+If your dashboard doesn’t have a “Processing” widget, there should be another widget that shows the “Avg Log Size” in KiB.
+ 
+
+
+Analysis errored
+from pathlib import Path
+import re
+
+base = Path('/mnt/data/Exabeam_Calculator_v1.7_updated.html')
+html = base.read_text(encoding='utf-8')
+
+# Replace the hover popup block with a clickable link icon
+pattern = re.compile(r'''
+\s*<span class="info-wrapper">.*?</span>\s*
+\s*<br>\(800 is default\):
+''', re.DOTALL)
+
+replacement = '''
+          <span class="info-wrapper">
+
+            <a href="averagelogsize.html" target="_blank" style="text-decoration:none;">
+
+              <span class="info-icon">?</span>
+
+            </a>
+
+          </span>
+
+          <br>(800 is default):
+'''
+
+html = pattern.sub(replacement, html, count=1)
+
+updated_file = Path('/mnt/data/Exabeam_Calculator_v1.8.html')
+updated_file.write_text(html, encoding='utf-8')
+
+average_page = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Average Log Size</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f4f4;
+    margin:0;
+    padding:40px;
+    color:#111;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:40px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,.10);
+}
+
+h1{
+    color:#28a745;
+    margin-top:0;
+}
+
+p{
+    line-height:1.7;
+    font-size:18px;
+}
+
+.step{
+    margin-bottom:20px;
+}
+
+.note{
+    margin-top:30px;
+    padding:16px;
+    background:#f8f9fa;
+    border-left:5px solid #28a745;
+}
+
+.code{
+    background:#eee;
+    padding:2px 6px;
+    border-radius:4px;
+    font-family: Consolas, monospace;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Average Log Size</h1>
+
+<p>
+To get the average byte size per log, follow these steps:
+</p>
+
+<div class="step">
+<p>
+1. Remote access into the XM/platform manager.
+</p>
+</div>
+
+<div class="step">
+<p>
+2. Open a browser and pull up:
+<br><br>
+<span class="code">https://localhost:3000</span>
+<br><br>
+Select <b>Mediator</b>.
+If your Grafana doesn’t look like the screenshot, you can search
+<b>“mediator”</b> in the search bar to locate the dashboard.
+</p>
+</div>
+
+<div class="step">
+<p>
+3. The <b>Mediator: Processing</b> widget will show the
+<b>Average Log Size in Bytes</b> for the timeframe of your choosing.
+</p>
+
+<p>
+I recommend a metric timeframe of at least 2 weeks if not greater.
+</p>
+</div>
+
+<div class="note">
+<p>
+If your dashboard doesn’t have a “Processing” widget, there should
+be another widget that shows the “Avg Log Size” in KiB.
+</p>
+</div>
+
+</div>
+
+</body>
+</html>
+"""
+
+avg_file = Path('/mnt/data/averagelogsize.html')
+avg_file.write_text(average_page, encoding='utf-8')
+
+print("Files created:")
+print(updated_file)
+print(avg_file)
+
+Analyzed
+from pathlib import Path
+import re
+
+original = Path('/mnt/data/Exabeam Calculator v1.5.html')
+html = original.read_text(encoding='utf-8')
+
+# Add recommended ingest tier section
+html = html.replace(
+"""      <span id="gbResult">0 GiB/day</span>
+
+      <div class="small">""",
+"""      <span id="gbResult">0 GiB/day</span>
+
+      <p style="margin-top:10px;">
+        <b>Recommended Ingest Tier:</b>
+        <span id="tierResult">0 GB/day</span>
+      </p>
+
+      <div class="small">"""
+)
+
+# Replace popup with link
+popup_pattern = re.compile(
+    r'<span class="info-wrapper">.*?</span>\s*<br>\(800 is default\):',
+    re.DOTALL
+)
+
+popup_replacement = """
+<span class="info-wrapper">
+
+  <a href="averagelogsize.html" target="_blank" style="text-decoration:none;">
+
+    <span class="info-icon">?</span>
+
+  </a>
+
+</span>
+
+<br>(800 is default):
+"""
+
+html = popup_pattern.sub(popup_replacement, html, count=1)
+
+# Add custom round function
+html = html.replace(
+"  function asNumber(value){",
+"""
+  function customRound(value){
+    const whole = Math.floor(value);
+    const decimal = value - whole;
+
+    return decimal < 0.20 ? whole : Math.ceil(value);
+  }
+
+  function asNumber(value){
+"""
+)
+
+# Update tier calculation
+html = html.replace(
+"""    document.getElementById('gbResult').textContent =
+      gibPerDay.toFixed(2) + ' GiB/day';""",
+"""    document.getElementById('gbResult').textContent =
+      gibPerDay.toFixed(2) + ' GiB/day';
+
+    const recommendedTier =
+      Math.ceil(gibPerDay / 25) * 25;
+
+    document.getElementById('tierResult').textContent =
+      recommendedTier + ' GB/day';"""
+)
+
+# Clear tier
+html = html.replace(
+"""    document.getElementById('gbResult').textContent = '0 GiB/day';
+
+    setError('error1', '');""",
+"""    document.getElementById('gbResult').textContent = '0 GiB/day';
+
+    document.getElementById('tierResult').textContent =
+      '0 GB/day';
+
+    setError('error1', '');"""
+)
+
+# Fix searchable TB
+html = html.replace(
+"""    const searchableTB =
+      (ingestRate * DAYS_PER_MONTH * searchableMonthsTotal) / 1000;""",
+"""    const searchableTB =
+      (ingestRate * DAYS_PER_MONTH * additionalSearchable) / 1000;"""
+)
+
+# Apply custom rounding
+html = html.replace(
+"Math.ceil(searchableTB) + ' TB';",
+"customRound(searchableTB) + ' TB';"
+)
+
+html = html.replace(
+"Math.ceil(archiveTB) + ' TB';",
+"customRound(archiveTB) + ' TB';"
+)
+
+main_output = Path('/mnt/data/Exabeam_Calculator_v1.8.html')
+main_output.write_text(html, encoding='utf-8')
+
+average_html = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -89,3 +783,418 @@ be another widget that shows the “Avg Log Size” in KiB.
 
 </body>
 </html>
+"""
+
+avg_output = Path('/mnt/data/averagelogsize.html')
+avg_output.write_text(average_html, encoding='utf-8')
+
+print("Created:")
+print(main_output)
+print(avg_output)
+STDOUT/STDERR
+Created:
+/mnt/data/Exabeam_Calculator_v1.8.html
+/mnt/data/averagelogsize.html
+Updated files created with ONLY the approved changes:
+
+Tab 1 green question mark now opens:
+averagelogsize.html
+
+The old hover popup was removed
+
+Your Average Log Size instructions page was created
+
+Downloads:
+
+Main Calculator v1.8
+
+averagelogsize.html 
+
+
+
+
+
+
+1.png
+2.png
+3.png
+4.png
+Ok lets focus on the Averagelogsize html. 
+
+I want to add pictures to these. Place them where appropriate.
+
+Thought for a few seconds
+
+Analyzed
+from pathlib import Path
+import zipfile
+
+avg_html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Average Log Size</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f4f4;
+    margin:0;
+    padding:40px;
+    color:#111;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+    background:white;
+    padding:40px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,.10);
+}
+
+h1{
+    color:#28a745;
+    margin-top:0;
+}
+
+h2{
+    margin-top:34px;
+    color:#222;
+}
+
+p{
+    line-height:1.7;
+    font-size:18px;
+}
+
+.step{
+    margin-bottom:28px;
+}
+
+.screenshot{
+    display:block;
+    max-width:100%;
+    height:auto;
+    margin:18px auto 28px auto;
+    border:1px solid #ddd;
+    border-radius:8px;
+    box-shadow:0 4px 14px rgba(0,0,0,.12);
+}
+
+.note{
+    margin-top:30px;
+    padding:16px;
+    background:#f8f9fa;
+    border-left:5px solid #28a745;
+    font-size:17px;
+    line-height:1.6;
+}
+
+.code{
+    background:#eee;
+    padding:2px 6px;
+    border-radius:4px;
+    font-family: Consolas, monospace;
+}
+
+.caption{
+    text-align:center;
+    font-size:14px;
+    color:#555;
+    margin-top:-18px;
+    margin-bottom:26px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Average Log Size</h1>
+
+<p>
+To get the average byte size per log, follow these steps:
+</p>
+
+<div class="step">
+<h2>1. Open Grafana on the XM/Platform Manager</h2>
+
+<p>
+Remote access into the XM/platform manager.
+</p>
+
+<p>
+Open a browser and pull up:
+<br><br>
+<span class="code">https://localhost:3000</span>
+</p>
+</div>
+
+<div class="step">
+<h2>2. Open Dashboards</h2>
+
+<p>
+In Grafana, select <b>Dashboards</b> from the left navigation menu.
+</p>
+
+<img class="screenshot" src="1.png" alt="Grafana Dashboards menu highlighted">
+<div class="caption">Select Dashboards from the left-side Grafana menu.</div>
+</div>
+
+<div class="step">
+<h2>3. Select the Mediator Dashboard</h2>
+
+<p>
+Under the <b>Pipeline</b> folder, select <b>Mediator</b>.
+If your Grafana doesn’t look like the screenshot, you can search
+<b>“mediator”</b> in the search bar to locate the dashboard.
+</p>
+
+<img class="screenshot" src="2.png" alt="Mediator dashboard highlighted under Pipeline folder">
+<div class="caption">Open the Mediator dashboard under Pipeline.</div>
+</div>
+
+<div class="step">
+<h2>4. Choose a Timeframe</h2>
+
+<p>
+Choose the timeframe you want to use for the metric. I recommend a metric
+timeframe of at least <b>2 weeks</b>, if not greater.
+</p>
+
+<img class="screenshot" src="3.png" alt="Grafana time picker showing time range options">
+<div class="caption">Use the Grafana time picker to select the desired timeframe.</div>
+</div>
+
+<div class="step">
+<h2>5. Locate Average Log Size</h2>
+
+<p>
+The <b>Mediator: Processing</b> widget will show the
+<b>Average Log Size in Bytes</b> for the timeframe of your choosing.
+</p>
+
+<img class="screenshot" src="4.png" alt="Mediator Processing widget showing Average Log Size Bytes">
+<div class="caption">Use the Average Log Size Bytes value from the Mediator: Processing widget.</div>
+</div>
+
+<div class="note">
+If your dashboard doesn’t have a “Processing” widget, there should
+be another widget that shows the “Avg Log Size” in KiB.
+</div>
+
+</div>
+
+</body>
+</html>
+"""
+
+out_dir = Path('/mnt/data/averagelogsize_package')
+out_dir.mkdir(exist_ok=True)
+
+html_path = out_dir / 'averagelogsize.html'
+html_path.write_text(avg_html, encoding='utf-8')
+
+for name in ['1.png', '2.png', '3.png', '4.png']:
+    src = Path('/mnt/data') / name
+    dst = out_dir / name
+    if src.exists():
+        dst.write_bytes(src.read_bytes())
+
+zip_path = Path('/mnt/data/averagelogsize_with_images.zip')
+with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as z:
+    z.write(html_path, arcname='averagelogsize.html')
+    for name in ['1.png', '2.png', '3.png', '4.png']:
+        p = out_dir / name
+        if p.exists():
+            z.write(p, arcname=name)
+
+standalone_html = Path('/mnt/data/averagelogsize.html')
+standalone_html.write_text(avg_html, encoding='utf-8')
+
+print("Created updated Average Log Size page and ZIP package.")
+print(standalone_html)
+print(zip_path)
+STDOUT/STDERR
+Created updated Average Log Size page and ZIP package.
+/mnt/data/averagelogsize.html
+/mnt/data/averagelogsize_with_images.zip
+Done.
+
+Download the full package with the HTML and images together:
+
+Download averagelogsize_with_images.zip
+
+Individual updated HTML:
+
+Download averagelogsize.html 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Average Log Size</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f4f4;
+    margin:0;
+    padding:40px;
+    color:#111;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+    background:white;
+    padding:40px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,.10);
+}
+
+h1{
+    color:#28a745;
+    margin-top:0;
+}
+
+h2{
+    margin-top:34px;
+    color:#222;
+}
+
+p{
+    line-height:1.7;
+    font-size:18px;
+}
+
+.step{
+    margin-bottom:28px;
+}
+
+.screenshot{
+    display:block;
+    max-width:100%;
+    height:auto;
+    margin:18px auto 28px auto;
+    border:1px solid #ddd;
+    border-radius:8px;
+    box-shadow:0 4px 14px rgba(0,0,0,.12);
+}
+
+.note{
+    margin-top:30px;
+    padding:16px;
+    background:#f8f9fa;
+    border-left:5px solid #28a745;
+    font-size:17px;
+    line-height:1.6;
+}
+
+.code{
+    background:#eee;
+    padding:2px 6px;
+    border-radius:4px;
+    font-family: Consolas, monospace;
+}
+
+.caption{
+    text-align:center;
+    font-size:14px;
+    color:#555;
+    margin-top:-18px;
+    margin-bottom:26px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Average Log Size</h1>
+
+<p>
+To get the average byte size per log, follow these steps:
+</p>
+
+<div class="step">
+<h2>1. Open Grafana on the XM/Platform Manager</h2>
+
+<p>
+Remote access into the XM/platform manager.
+</p>
+
+<p>
+Open a browser and pull up:
+<br><br>
+<span class="code">https://localhost:3000</span>
+</p>
+</div>
+
+<div class="step">
+<h2>2. Open Dashboards</h2>
+
+<p>
+In Grafana, select <b>Dashboards</b> from the left navigation menu.
+</p>
+
+<img class="screenshot" src="1.png" alt="Grafana Dashboards menu highlighted">
+<div class="caption">Select Dashboards from the left-side Grafana menu.</div>
+</div>
+
+<div class="step">
+<h2>3. Select the Mediator Dashboard</h2>
+
+<p>
+Under the <b>Pipeline</b> folder, select <b>Mediator</b>.
+If your Grafana doesn’t look like the screenshot, you can search
+<b>“mediator”</b> in the search bar to locate the dashboard.
+</p>
+
+<img class="screenshot" src="2.png" alt="Mediator dashboard highlighted under Pipeline folder">
+<div class="caption">Open the Mediator dashboard under Pipeline.</div>
+</div>
+
+<div class="step">
+<h2>4. Choose a Timeframe</h2>
+
+<p>
+Choose the timeframe you want to use for the metric. I recommend a metric
+timeframe of at least <b>2 weeks</b>, if not greater.
+</p>
+
+<img class="screenshot" src="3.png" alt="Grafana time picker showing time range options">
+<div class="caption">Use the Grafana time picker to select the desired timeframe.</div>
+</div>
+
+<div class="step">
+<h2>5. Locate Average Log Size</h2>
+
+<p>
+The <b>Mediator: Processing</b> widget will show the
+<b>Average Log Size in Bytes</b> for the timeframe of your choosing.
+</p>
+
+<img class="screenshot" src="4.png" alt="Mediator Processing widget showing Average Log Size Bytes">
+<div class="caption">Use the Average Log Size Bytes value from the Mediator: Processing widget.</div>
+</div>
+
+<div class="note">
+If your dashboard doesn’t have a “Processing” widget, there should
+be another widget that shows the “Avg Log Size” in KiB.
+</div>
+
+</div>
+
+</body>
+</html>
+
